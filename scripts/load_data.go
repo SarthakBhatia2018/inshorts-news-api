@@ -34,9 +34,15 @@ func main() {
 
 	log.Println("Loading news data from JSON file...")
 
-	data, err := ioutil.ReadFile("/Users/sarthakbhatia/Developer/inshorts-news-api/scripts/news_data.json")
+	path := "scripts/news_data.json"
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Fatal("Failed to read JSON file:", err)
+		// Try absolute path if relative fails (e.g. running from root vs scripts dir)
+		path = "news_data.json"
+		data, err = ioutil.ReadFile(path)
+		if err != nil {
+			log.Fatal("Failed to read JSON file from scripts/news_data.json or news_data.json:", err)
+		}
 	}
 
 	var rawArticles []map[string]interface{}
@@ -54,7 +60,10 @@ func main() {
             created_at, updated_at
         ) VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
-        ) ON CONFLICT (id) DO NOTHING
+        ) ON CONFLICT (id) DO UPDATE SET 
+            publication_date = EXCLUDED.publication_date,
+            latitude = EXCLUDED.latitude,
+            longitude = EXCLUDED.longitude
     `)
 	if err != nil {
 		log.Fatal("Failed to prepare statement:", err)
@@ -64,7 +73,17 @@ func main() {
 	// Insert articles
 	successCount := 0
 	for _, raw := range rawArticles {
-		pubDate, _ := time.Parse(time.RFC3339, raw["publication_date"].(string))
+		dateStr := raw["publication_date"].(string)
+		pubDate, err := time.Parse(time.RFC3339, dateStr)
+		if err != nil {
+			// Try without timezone
+			pubDate, err = time.Parse("2006-01-02T15:04:05", dateStr)
+			if err != nil {
+				// Try another common format or just use Now
+				// log.Printf("Warning: Failed to parse date %s, using current time", dateStr)
+				pubDate = time.Now()
+			}
+		}
 
 		// Handle category array properly
 		categories := []string{}
@@ -82,7 +101,7 @@ func main() {
 
 		now := time.Now()
 
-		_, err := stmt.Exec(
+		_, err = stmt.Exec(
 			raw["id"].(string),
 			raw["title"].(string),
 			raw["description"].(string),
