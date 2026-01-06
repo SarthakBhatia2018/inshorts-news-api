@@ -64,6 +64,7 @@ Return JSON only in this exact format:
 	)
 
 	if err != nil {
+		fmt.Printf("LLM Error: %v\n", err)
 		// Fallback to keyword analysis on error
 		return s.fallbackAnalyzeQuery(query), nil
 	}
