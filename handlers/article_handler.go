@@ -50,13 +50,13 @@ func (h *ArticleHandler) QueryNews(c *gin.Context) {
 	switch intent.Intent {
 	case "category":
 		if len(intent.Entities) > 0 {
-			params["category"] = intent.Entities
+			params["category"] = intent.Entities[0]
 		} else {
 			params["category"] = "General"
 		}
 	case "source":
 		if len(intent.Entities) > 0 {
-			params["source"] = intent.Entities
+			params["source"] = intent.Entities[0]
 		}
 	case "score":
 		params["min_score"] = 0.7
