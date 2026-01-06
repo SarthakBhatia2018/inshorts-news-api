@@ -104,8 +104,15 @@ func (s *LLMService) fallbackAnalyzeQuery(query string) *models.QueryIntent {
 	if strings.Contains(lower, "near") || strings.Contains(lower, "nearby") || strings.Contains(lower, "around") {
 		intent.Intent = "nearby"
 	} else if strings.Contains(lower, "category") || strings.Contains(lower, "technology") ||
-		strings.Contains(lower, "business") || strings.Contains(lower, "sports") {
+		strings.Contains(lower, "business") || strings.Contains(lower, "sports") || strings.Contains(lower, "tech") {
 		intent.Intent = "category"
+		if strings.Contains(lower, "technology") || strings.Contains(lower, "tech") {
+			intent.Entities = append(intent.Entities, "technology")
+		} else if strings.Contains(lower, "business") {
+			intent.Entities = append(intent.Entities, "business")
+		} else if strings.Contains(lower, "sports") {
+			intent.Entities = append(intent.Entities, "sports")
+		}
 	} else if strings.Contains(lower, "from") && (strings.Contains(lower, "times") || strings.Contains(lower, "reuters")) {
 		intent.Intent = "source"
 	} else if strings.Contains(lower, "relevant") || strings.Contains(lower, "important") {
